@@ -1,0 +1,50 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+using TransactionAuthorizer.Infrastructure;
+using Serilog;
+using Microsoft.OpenApi.Models;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Serilog configuration
+builder.Host.UseSerilog((hostingContext, loggerConfiguration) => loggerConfiguration
+    .ReadFrom.Configuration(hostingContext.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Debug());
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+builder.Services.AddInfrastructure();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TransactionAuthorizer", Version = "v1" });
+});
+
+var app = builder.Build();
+
+
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TransactionAuthorizer v1"));
+
+// Global error handling
+app.UseExceptionHandler("/error");
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync("Internal Error");
+        Serilog.Log.Error(ex, "Internal Error");
+    }
+});
+
+app.Run();
