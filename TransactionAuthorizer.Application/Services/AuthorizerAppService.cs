@@ -6,20 +6,16 @@ using TransactionAuthorizer.Domain.Interfaces;
 
 namespace TransactionAuthorizer.Application.Services;
 
-public sealed class AuthorizerService(IAuthorizerService authorizer) : IAuthorizerAppService
+public sealed class AuthorizerAppService(IAuthorizerService authorizer) : IAuthorizerAppService
 {
     private readonly IAuthorizerService _authorizer = authorizer;
 
-    public async Task<string> AuthorizeTransactionAsync(TransactionRequestModel transaction)
+    public async Task<AuthorizationResponseModel> AuthorizeTransactionAsync(TransactionRequestModel transaction)
     {
         try
         {
             var result = await _authorizer.AuthorizeAsync(transaction.AsDomain());
-            return result.ToString();
-        }
-        catch (InsufficientBalanceException ex)
-        {
-            throw new InvalidTransactionException(ex.Message, ex);
+            return result.AsModel();
         }
         catch (Exception ex)
         {

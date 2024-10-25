@@ -3,7 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Data;
 using System.Data.SqlClient;
 using TransactionAuthorizer.Application.Interfaces;
+using TransactionAuthorizer.Application.Services;
 using TransactionAuthorizer.Domain.Interfaces;
+using TransactionAuthorizer.Domain.Services;
 using TransactionAuthorizer.Infrastructure.Configurations;
 using TransactionAuthorizer.Infrastructure.Repositories;
 
@@ -21,8 +23,9 @@ public static class DependencyInjection
         services.AddTransient<IAccountRepository, AccountRepository>();
         services.AddTransient<IBenefitCategoryRepository, BenefitCategoryRepository>();
         services.AddTransient<IMerchantCategoryCodeRepository, MerchantCategoryCodeRepository>();
-        services.AddTransient<IAuthorizerService, Domain.Services.AuthorizerService>();
-        services.AddTransient<IAuthorizerAppService, Application.Services.AuthorizerService>();
+        services.AddTransient<IAuthorizerService, AuthorizerService>();
+        services.AddTransient<IAuthorizerAppService, AuthorizerAppService>();
+        services.AddTransient<ITransactionLogRepository, TransactionLogRepository>();
         services.AddTransient<MigrationService>();
 
         return services;

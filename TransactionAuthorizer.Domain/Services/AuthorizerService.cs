@@ -19,7 +19,7 @@ public sealed class AuthorizerService(
     private readonly ITransactionLogRepository _transactionLogRepository = transactionLogRepository;
     private readonly SemaphoreSlim _semaphore = semaphore;
 
-    public async Task<AuthorizationCode> AuthorizeAsync(TransactionDomain transaction)
+    public async Task<AuthorizationResponseDomain> AuthorizeAsync(TransactionDomain transaction)
     {
         ArgumentNullException.ThrowIfNull(transaction);
 
@@ -28,11 +28,11 @@ public sealed class AuthorizerService(
 
         await _semaphore.WaitAsync();
 
+        try
+        {
         var account = await _accountRepository.GetAccountAsync(transaction.AccountNumber) ??
             throw new NonExistentAccountException($"There is no account for the number {transaction.AccountNumber} provided");
 
-        try
-        {
             var benefitCategory = await _benefitCategoryRepository.GetBenefitCategoryAsync(transaction.MerchantCategoryCode) ??
                 await _benefitCategoryRepository.GetDefaultBenefitCategoryAsync();
 
@@ -42,28 +42,23 @@ public sealed class AuthorizerService(
             if (balance < transaction.TotalAmount)
             {
                 _logger.LogWarning("Insufficient balance for category: {Category}.", benefitCategory);
-                throw new InsufficientBalanceException("The balance for the benefit category is insufficient to authorize the transaction.");
+                await SaveTransactionLogAsync(account, transaction, AuthorizationCode.InsufficientBalance.ToString()); 
+                return new AuthorizationResponseDomain("51");
             }
 
             _logger.LogInformation("Update the balance...");
             await _accountRepository.UpdateAccountBalanceAsync(transaction.AccountNumber, benefitCategory.Id, transaction.TotalAmount);
 
             _logger.LogInformation("Transaction authorized for category: {Category}.", benefitCategory);
+            await SaveTransactionLogAsync(account, transaction, AuthorizationCode.Approved.ToString()); 
 
-            await SaveTransactionLogAsync(account, transaction, nameof(AuthorizationCode.Approved));
-
-            return AuthorizationCode.Approved;
-        }
-        catch (InsufficientBalanceException ex)
-        {
-            await SaveTransactionLogAsync(account, transaction, nameof(AuthorizationCode.InsufficientBalance));
-
-            throw new InvalidTransactionException(ex.Message, ex);
+            return new AuthorizationResponseDomain("00");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error authorizing transaction for account: {Account}.", transaction.AccountNumber);
-            throw;
+            await SaveTransactionLogAsync(null, transaction, AuthorizationCode.OtherError.ToString()); 
+            return new AuthorizationResponseDomain("07");
         }
         finally
         {
@@ -71,11 +66,11 @@ public sealed class AuthorizerService(
         }
     }
 
-    private async Task SaveTransactionLogAsync(AccountDomain account, TransactionDomain transaction, string authorizationCode)
+    private async Task SaveTransactionLogAsync(AccountDomain? account, TransactionDomain transaction, string authorizationCode)
     {
         var log = new TransactionLogDomain(
             Id: 0,
-            AccountId: account.Id,
+            AccountId: account?.Id,
             Amount: transaction.TotalAmount,
             MerchantName: transaction.MerchantName,
             MerchantCategoryCode: transaction.MerchantCategoryCode,
