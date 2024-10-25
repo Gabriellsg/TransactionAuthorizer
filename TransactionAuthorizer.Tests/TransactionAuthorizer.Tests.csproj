@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TransactionAuthorizer.Application\TransactionAuthorizer.Application.csproj" />
     <ProjectReference Include="..\TransactionAuthorizer.Domain\TransactionAuthorizer.Domain.csproj" />
+    <ProjectReference Include="..\TransactionAuthorizer\TransactionAuthorizer.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,7 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using TransactionAuthorizer.Application.Interfaces;
 using TransactionAuthorizer.Domain.Interfaces;
-using TransactionAuthorizer.Infrastructure;
+using TransactionAuthorizer.Infrastructure.Configurations;
 using TransactionAuthorizer.Infrastructure.Repositories;
 
 namespace TransactionAuthorizer.CrossCutting.IoC;
