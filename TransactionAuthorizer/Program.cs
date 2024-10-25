@@ -3,7 +3,7 @@ using Microsoft.Identity.Web;
 using TransactionAuthorizer.CrossCutting.IoC;
 using Serilog;
 using Microsoft.OpenApi.Models;
-using TransactionAuthorizer.Infrastructure;
+using TransactionAuthorizer.Infrastructure.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 

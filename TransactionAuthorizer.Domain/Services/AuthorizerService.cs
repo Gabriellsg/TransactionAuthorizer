@@ -7,14 +7,16 @@ using TransactionAuthorizer.Domain.Interfaces;
 namespace TransactionAuthorizer.Domain.Services;
 
 public sealed class AuthorizerService(
+    ILogger<AuthorizerService> logger,
     IAccountRepository accountRepository,
     IBenefitCategoryRepository benefitCategoryRepository,
-    ILogger<AuthorizerService> logger,
+    ITransactionLogRepository transactionLogRepository,
     SemaphoreSlim semaphore) : IAuthorizerService
 {
+    private readonly ILogger<AuthorizerService> _logger = logger;
     private readonly IAccountRepository _accountRepository = accountRepository;
     private readonly IBenefitCategoryRepository _benefitCategoryRepository = benefitCategoryRepository;
-    private readonly ILogger<AuthorizerService> _logger = logger;
+    private readonly ITransactionLogRepository _transactionLogRepository = transactionLogRepository;
     private readonly SemaphoreSlim _semaphore = semaphore;
 
     public async Task<AuthorizationCode> AuthorizeAsync(TransactionDomain transaction)
@@ -25,6 +27,9 @@ public sealed class AuthorizerService(
             throw new InvalidTransactionAmountException($"Total amount {transaction.TotalAmount} must be greater than zero.");
 
         await _semaphore.WaitAsync();
+
+        var account = await _accountRepository.GetAccountAsync(transaction.AccountNumber) ??
+            throw new NonExistentAccountException($"There is no account for the number {transaction.AccountNumber} provided");
 
         try
         {
@@ -44,7 +49,16 @@ public sealed class AuthorizerService(
             await _accountRepository.UpdateAccountBalanceAsync(transaction.AccountNumber, benefitCategory.Id, transaction.TotalAmount);
 
             _logger.LogInformation("Transaction authorized for category: {Category}.", benefitCategory);
+
+            await SaveTransactionLogAsync(account, transaction, nameof(AuthorizationCode.Approved));
+
             return AuthorizationCode.Approved;
+        }
+        catch (InsufficientBalanceException ex)
+        {
+            await SaveTransactionLogAsync(account, transaction, nameof(AuthorizationCode.InsufficientBalance));
+
+            throw new InvalidTransactionException(ex.Message, ex);
         }
         catch (Exception ex)
         {
@@ -55,5 +69,19 @@ public sealed class AuthorizerService(
         {
             _semaphore.Release();
         }
+    }
+
+    private async Task SaveTransactionLogAsync(AccountDomain account, TransactionDomain transaction, string authorizationCode)
+    {
+        var log = new TransactionLogDomain(
+            Id: 0,
+            AccountId: account.Id,
+            Amount: transaction.TotalAmount,
+            MerchantName: transaction.MerchantName,
+            MerchantCategoryCode: transaction.MerchantCategoryCode,
+            TransactionDate: DateTime.Now,
+            AuthorizationCode: authorizationCode);
+
+        await _transactionLogRepository.AddTransactionLogAsync(log);
     }
 }

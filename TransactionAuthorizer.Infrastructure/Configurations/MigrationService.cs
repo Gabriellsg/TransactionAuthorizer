@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using System.Data;
 
-namespace TransactionAuthorizer.Infrastructure;
+namespace TransactionAuthorizer.Infrastructure.Configurations;
 
 public class MigrationService(IDbConnection dbConnection)
 {

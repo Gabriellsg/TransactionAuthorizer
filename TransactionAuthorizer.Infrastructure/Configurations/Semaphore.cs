@@ -1,4 +1,4 @@
-﻿namespace TransactionAuthorizer.Infrastructure;
+﻿namespace TransactionAuthorizer.Infrastructure.Configurations;
 
 public sealed class SemaphoreWrapper(int slots) : IDisposable
 {
