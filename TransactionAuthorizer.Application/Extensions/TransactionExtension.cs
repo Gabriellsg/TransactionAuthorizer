@@ -26,4 +26,6 @@ public static class TransactionExtension
             self.MerchantCategoryCode,
             self.MerchantName);
     }
+
+    public static AuthorizationResponseModel AsModel(this AuthorizationResponseDomain self) => new(self.Code);
 }

@@ -20,12 +20,7 @@ public sealed class TransactionsController(IAuthorizerAppService authorizerAppSe
             var authorizationCode = await _authorizerAppService.AuthorizeTransactionAsync(transaction);
             _logger.LogInformation("Transaction authorized.");
             return Ok(new { code = authorizationCode });
-        }
-        catch (InsufficientBalanceException ex)
-        {
-            _logger.LogWarning(ex, "Insufficient balance for transaction.");
-            return BadRequest(new { message = ex.Message });
-        }
+        }    
         catch (InvalidTransactionException ex)
         {
             _logger.LogWarning(ex, "Invalid transaction.");
