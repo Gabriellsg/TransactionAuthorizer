@@ -4,5 +4,5 @@ namespace TransactionAuthorizer.Application.Interfaces;
 
 public interface IAuthorizerAppService
 {
-    Task<string> Authorize(TransactionRequestModel transaction);
+    Task<string> AuthorizeTransactionAsync(TransactionRequestModel transaction);
 }

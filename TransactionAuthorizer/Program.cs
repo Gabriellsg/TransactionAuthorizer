@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
-using TransactionAuthorizer.Infrastructure;
+using TransactionAuthorizer.CrossCutting.IoC;
 using Serilog;
 using Microsoft.OpenApi.Models;
+using TransactionAuthorizer.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ builder.Host.UseSerilog((hostingContext, loggerConfiguration) => loggerConfigura
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -30,8 +31,18 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TransactionAuthorizer v1"));
 
-// Global error handling
 app.UseExceptionHandler("/error");
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRouting();
+app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var migrationService = scope.ServiceProvider.GetRequiredService<MigrationService>();
+    await migrationService.ApplyMigrationsAsync();
+}
 
 app.Use(async (context, next) =>
 {
