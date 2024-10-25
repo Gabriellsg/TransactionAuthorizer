@@ -1,51 +1,59 @@
 ﻿using Microsoft.Extensions.Logging;
 using TransactionAuthorizer.Domain.Entities;
+using TransactionAuthorizer.Domain.Enums;
 using TransactionAuthorizer.Domain.Exceptions;
 using TransactionAuthorizer.Domain.Interfaces;
 
 namespace TransactionAuthorizer.Domain.Services;
 
-public sealed record AuthorizerService(
-    Dictionary<string, decimal> BenefitBalances, 
-    ILogger<AuthorizerService> Logger,
-    SemaphoreSlim Semaphore) : IAuthorizerService
+public sealed class AuthorizerService(
+    IAccountRepository accountRepository,
+    IBenefitCategoryRepository benefitCategoryRepository,
+    ILogger<AuthorizerService> logger,
+    SemaphoreSlim semaphore) : IAuthorizerService
 {
-    public async Task<string> AuthorizeAsync(TransactionDomain transaction)
+    private readonly IAccountRepository _accountRepository = accountRepository;
+    private readonly IBenefitCategoryRepository _benefitCategoryRepository = benefitCategoryRepository;
+    private readonly ILogger<AuthorizerService> _logger = logger;
+    private readonly SemaphoreSlim _semaphore = semaphore;
+
+    public async Task<AuthorizationCode> AuthorizeAsync(TransactionDomain transaction)
     {
-        await Semaphore.WaitAsync();
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        if (transaction.TotalAmount <= 0)
+            throw new InvalidTransactionAmountException($"Total amount {transaction.TotalAmount} must be greater than zero.");
+
+        await _semaphore.WaitAsync();
 
         try
         {
-            var benefitCategory = GetBenefitCategory(transaction.MerchantCategoryCode);
+            var benefitCategory = await _benefitCategoryRepository.GetBenefitCategoryAsync(transaction.MerchantCategoryCode) ??
+                await _benefitCategoryRepository.GetDefaultBenefitCategoryAsync();
 
-            if (BenefitBalances[benefitCategory] < transaction.TotalAmount)
+            _logger.LogInformation("Get the balance for the account");
+            var balance = await _accountRepository.GetBenefitBalanceAsync(transaction.AccountNumber, benefitCategory);
+
+            if (balance < transaction.TotalAmount)
             {
-                Logger.LogWarning("Insufficient balance.");
-                throw new InsufficientBalanceException();
+                _logger.LogWarning("Insufficient balance for category: {Category}.", benefitCategory);
+                throw new InsufficientBalanceException("The balance for the benefit category is insufficient to authorize the transaction.");
             }
 
-            BenefitBalances[benefitCategory] -= transaction.TotalAmount;
-            Logger.LogInformation("Transaction authorized.");
-            return "00";
+            _logger.LogInformation("Update the balance...");
+            await _accountRepository.UpdateAccountBalanceAsync(transaction.AccountNumber, benefitCategory.Id, transaction.TotalAmount);
+
+            _logger.LogInformation("Transaction authorized for category: {Category}.", benefitCategory);
+            return AuthorizationCode.Approved;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error authorizing transaction.");
+            _logger.LogError(ex, "Error authorizing transaction for account: {Account}.", transaction.AccountNumber);
             throw;
         }
         finally
         {
-            Semaphore.Release();
+            _semaphore.Release();
         }
-    }
-
-    private string GetBenefitCategory(string merchantCategoryCode)
-    {
-        return merchantCategoryCode switch
-        {
-            "5411" or "5412" => "Food",
-            "5811" or "5812" => "Meal",
-            _ => "Cash"
-        };
     }
 }

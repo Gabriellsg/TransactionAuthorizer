@@ -3,40 +3,38 @@ using TransactionAuthorizer.Application.Interfaces;
 using TransactionAuthorizer.Application.Models;
 using TransactionAuthorizer.Domain.Exceptions;
 
-namespace TransactionAuthorizer.Controllers;
+namespace TransactionAuthorizer.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class TransactionsController : ControllerBase
+public sealed class TransactionsController(IAuthorizerAppService authorizerAppService, ILogger<TransactionsController> logger) : ControllerBase
 {
-    private readonly IAuthorizerAppService _authorizerAppService;
-    private readonly ILogger<TransactionsController> _logger;
-    private readonly Dictionary<Type, int> _errorCodes = new()
-    {
-        { typeof(InsufficientBalanceException), 400 },
-        { typeof(Exception), 500 }
-    };
-
-    public TransactionsController(IAuthorizerAppService authorizerAppService, ILogger<TransactionsController> logger)
-    {
-        _authorizerAppService = authorizerAppService;
-        _logger = logger;
-    }
+    private readonly IAuthorizerAppService _authorizerAppService = authorizerAppService;
+    private readonly ILogger<TransactionsController> _logger = logger;
 
     [HttpPost]
-    public IActionResult Authorize(TransactionRequestModel transaction)
+    public async Task<IActionResult> Authorize([FromBody] TransactionRequestModel transaction)
     {
         try
         {
-            var authorizationCode = _authorizerAppService.Authorize(transaction);
+            var authorizationCode = await _authorizerAppService.AuthorizeTransactionAsync(transaction);
             _logger.LogInformation("Transaction authorized.");
             return Ok(new { code = authorizationCode });
+        }
+        catch (InsufficientBalanceException ex)
+        {
+            _logger.LogWarning(ex, "Insufficient balance for transaction.");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidTransactionException ex)
+        {
+            _logger.LogWarning(ex, "Invalid transaction.");
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error authorizing transaction.");
-            var statusCode = _errorCodes.FirstOrDefault(x => x.Key.IsAssignableFrom(ex.GetType())).Value;
-            return StatusCode(statusCode, ex.Message);
+            return StatusCode(500, new { message = "An unexpected error occurred." });
         }
     }
 }

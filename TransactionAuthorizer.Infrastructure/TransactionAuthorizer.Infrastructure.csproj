@@ -7,12 +7,36 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0-rc.2.23479.6" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TransactionAuthorizer.Application\TransactionAuthorizer.Application.csproj" />
     <ProjectReference Include="..\TransactionAuthorizer.Domain\TransactionAuthorizer.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Migrations\0001-CREATE_TABLE-BENEFIT_CATEGORY.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\0001-INSERT_TABLE-BENEFIT_CATEGORY.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\0002-CREATE_TABLE-MERCHANT_CATEGORY_CODE.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\0002-INSERT_TABLE-MERCHANT_CATEGORY_CODE.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\0003-CREATE_TABLE-ACCOUNT.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\0004-CREATE_TABLE-TRANSACTION_LOG.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

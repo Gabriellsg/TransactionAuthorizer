@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TransactionAuthorizer.Application\TransactionAuthorizer.Application.csproj" />
+    <ProjectReference Include="..\TransactionAuthorizer.CrossCutting.IoC\TransactionAuthorizer.CrossCutting.IoC.csproj" />
     <ProjectReference Include="..\TransactionAuthorizer.Infrastructure\TransactionAuthorizer.Infrastructure.csproj" />
   </ItemGroup>
 
