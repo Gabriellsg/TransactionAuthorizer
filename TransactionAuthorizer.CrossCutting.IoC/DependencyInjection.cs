@@ -33,8 +33,6 @@ public static class DependencyInjection
 
         services.AddTransient<ITransactionRequestModelValidator, TransactionRequestModelValidator>();
 
-        services.AddValidatorsFromAssemblyContaining<TransactionRequestModelValidator>();
-
         return services;
     }
 }
