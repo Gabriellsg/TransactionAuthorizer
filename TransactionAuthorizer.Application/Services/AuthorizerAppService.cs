@@ -6,12 +6,18 @@ using TransactionAuthorizer.Domain.Interfaces;
 
 namespace TransactionAuthorizer.Application.Services;
 
-public sealed class AuthorizerAppService(IAuthorizerService authorizer) : IAuthorizerAppService
+public sealed class AuthorizerAppService(IAuthorizerService authorizer, ITransactionRequestModelValidator validator) : IAuthorizerAppService
 {
     private readonly IAuthorizerService _authorizer = authorizer;
+    private readonly ITransactionRequestModelValidator _validator = validator;
 
     public async Task<AuthorizationResponseModel> AuthorizeTransactionAsync(TransactionRequestModel transaction)
     {
+        var validationResult = await _validator.ValidateAsync(transaction);
+        
+        if (!validationResult.IsValid)
+            throw new InvalidTransactionException("Invalid transaction data: " + string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
+
         try
         {
             var result = await _authorizer.AuthorizeAsync(transaction.AsDomain());

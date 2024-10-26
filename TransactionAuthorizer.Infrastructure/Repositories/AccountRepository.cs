@@ -41,26 +41,6 @@ public sealed class AccountRepository(IDbConnection dbConnection) : IAccountRepo
         });
     }
 
-    public async Task InitializeBalancesAsync(Dictionary<string, decimal> initialBalances)
-    {
-        foreach (var balance in initialBalances)
-        {
-            var query = @"INSERT INTO ACCOUNT 
-                              (ACCOUNT_NUMBER, BALANCE_FOOD, BALANCE_MEAL, BALANCE_CASH) 
-                          VALUES 
-                              (@ACCOUNTNUMBER, @BalanceFood, @BalanceMeal, @BalanceCash) 
-                          ON DUPLICATE KEY UPDATE BalanceFood = @BalanceFood, BalanceMeal = @BalanceMeal, BalanceCash = @BalanceCash";
-
-            await _dbConnection.ExecuteAsync(query, new
-            {
-                AccountNumber = balance.Key,
-                BalanceFood = balance.Value,
-                BalanceMeal = balance.Value,
-                BalanceCash = balance.Value
-            });
-        }
-    }
-
     public async Task<decimal> GetBenefitBalanceAsync(string accountNumber, BenefitCategoryDomain category)
     {
         string balanceColumn = SelectCategory(category.Id);

@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Data.Common;
-using System.Security.Principal;
-using System.Transactions;
 using TransactionAuthorizer.Domain.Entities;
 using TransactionAuthorizer.Domain.Enums;
 using TransactionAuthorizer.Domain.Exceptions;
@@ -42,7 +39,7 @@ public sealed class AuthorizerService(
 
             var merchantCategoryCode = transaction.MerchantCategoryCode;
             var merchant = await _merchantRepository.GetMerchantByNameAsync(transaction.MerchantName);
-            
+
             if (merchant != null)
             {
                 merchantCategoryCode = merchant.MerchantCategoryCode;
@@ -54,7 +51,7 @@ public sealed class AuthorizerService(
 
             _logger.LogInformation("Get the balance for the account");
             var (balance, benefity) = GetBenefitBalance(transaction.AccountNumber, benefitCategory, transaction.TotalAmount);
-            
+
             benefitCategory = benefitCategory with { Id = benefity.Id, Balance = balance, Name = benefity.Name };
 
             if (balance < transaction.TotalAmount)
