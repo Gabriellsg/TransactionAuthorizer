@@ -5,10 +5,12 @@ using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using TransactionAuthorizer.Application.Interfaces;
 using TransactionAuthorizer.Application.Services;
+using TransactionAuthorizer.Application.Validators;
 using TransactionAuthorizer.Domain.Interfaces;
 using TransactionAuthorizer.Domain.Services;
 using TransactionAuthorizer.Infrastructure.Configurations;
 using TransactionAuthorizer.Infrastructure.Repositories;
+using FluentValidation;
 
 namespace TransactionAuthorizer.CrossCutting.IoC;
 
@@ -28,6 +30,10 @@ public static class DependencyInjection
         services.AddTransient<ITransactionLogRepository, TransactionLogRepository>();
         services.AddTransient<IMerchantRepository, MerchantRepository>();
         services.AddTransient<MigrationService>();
+
+        services.AddTransient<ITransactionRequestModelValidator, TransactionRequestModelValidator>();
+
+        //services.AddValidatorsFromAssemblyContaining<TransactionRequestModelValidator>();
 
         return services;
     }
