@@ -1,10 +1,12 @@
 ﻿using Dapper;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using TransactionAuthorizer.Domain.Entities;
 using TransactionAuthorizer.Domain.Interfaces;
 
 namespace TransactionAuthorizer.Infrastructure.Repositories;
 
+[ExcludeFromCodeCoverage]
 public sealed class BenefitCategoryRepository(IDbConnection dbConnection) : IBenefitCategoryRepository
 {
     private readonly IDbConnection _dbConnection = dbConnection;
@@ -16,8 +18,8 @@ public sealed class BenefitCategoryRepository(IDbConnection dbConnection) : IBen
                         bc.NAME, 
                         bc.BALANCE 
                       FROM MERCHANT_CATEGORY_CODE mcc
-                      INNER JOIN BENEFIT_CATEGORY bc ON mcc.BENEFITCATEGORYID = bc.ID
-                      WHERE mcc.MCCCODE = @MerchantCategoryCode";
+                      INNER JOIN BENEFIT_CATEGORY bc ON mcc.BENEFIT_CATEGORY_ID = bc.ID
+                      WHERE mcc.MCC_CODE = @MerchantCategoryCode";
 
         return await _dbConnection.QueryFirstOrDefaultAsync<BenefitCategoryDomain>(query, new
         {

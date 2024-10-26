@@ -4,6 +4,6 @@ namespace TransactionAuthorizer.Domain.Interfaces;
 
 public interface IBenefitCategoryRepository
 {
-    Task<BenefitCategoryDomain?> GetBenefitCategoryAsync(string accountNumber);
+    Task<BenefitCategoryDomain?> GetBenefitCategoryAsync(string merchantCategoryCode);
     Task<BenefitCategoryDomain> GetDefaultBenefitCategoryAsync();
 }

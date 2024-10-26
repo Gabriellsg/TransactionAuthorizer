@@ -1,8 +1,10 @@
 ﻿using Dapper;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TransactionAuthorizer.Infrastructure.Configurations;
 
+[ExcludeFromCodeCoverage]
 public class MigrationService(IDbConnection dbConnection)
 {
     private readonly IDbConnection _dbConnection = dbConnection;
