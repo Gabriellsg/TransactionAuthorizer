@@ -27,6 +27,6 @@ public sealed class TransactionRequestModelValidator : AbstractValidator<Transac
 
     public async Task<ValidationResult> ValidateAsync(TransactionRequestModel transaction)
     {
-        return await ValidateAsync(transaction);
+        return await base.ValidateAsync(transaction);
     }
 }
