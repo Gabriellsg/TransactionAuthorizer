@@ -1,5 +1,8 @@
-﻿namespace TransactionAuthorizer.Infrastructure.Configurations;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace TransactionAuthorizer.Infrastructure.Configurations;
+
+[ExcludeFromCodeCoverage]
 public sealed class SemaphoreWrapper(int slots) : IDisposable
 {
     private readonly SemaphoreSlim _semaphore = new(slots);

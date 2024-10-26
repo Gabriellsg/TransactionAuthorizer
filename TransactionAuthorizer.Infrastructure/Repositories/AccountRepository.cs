@@ -1,10 +1,12 @@
 ﻿using Dapper;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using TransactionAuthorizer.Domain.Entities;
 using TransactionAuthorizer.Domain.Interfaces;
 
 namespace TransactionAuthorizer.Infrastructure.Repositories;
 
+[ExcludeFromCodeCoverage]
 public sealed class AccountRepository(IDbConnection dbConnection) : IAccountRepository
 {
     private readonly IDbConnection _dbConnection = dbConnection;
@@ -12,12 +14,13 @@ public sealed class AccountRepository(IDbConnection dbConnection) : IAccountRepo
     public async Task<AccountDomain?> GetAccountAsync(string accountNumber)
     {
         var query = @"SELECT 
-                        ACCOUNTNUMBER, 
-                        BALANCEFOOD, 
-                        BALANCEMEAL, 
-                        BALANCECASH 
-                      FROM Account 
-                      WHERE AccountNumber = @AccountNumber";
+                          ID,  
+                          ACCOUNT_NUMBER AS AccountNumber, 
+                          BALANCE_FOOD AS BalanceFood, 
+                          BALANCE_MEAL AS BalanceMeal, 
+                          BALANCE_CASH AS BalanceCash 
+                      FROM ACCOUNT 
+                      WHERE ACCOUNT_NUMBER = @AccountNumber";
 
         return await _dbConnection
             .QueryFirstOrDefaultAsync<AccountDomain>(query, new { AccountNumber = accountNumber });
@@ -25,15 +28,16 @@ public sealed class AccountRepository(IDbConnection dbConnection) : IAccountRepo
 
     public async Task UpdateAccountBalanceAsync(string accountNumber, int benefitCategoryId, decimal amount)
     {
-        var updateQuery = @"UPDATE ACCOUNT 
-                            SET Balance = Balance - @Amount 
-                            WHERE AccountNumber = @AccountNumber AND BenefitCategoryId = @BenefitCategoryId";
+        string balanceColumn = SelectCategory(benefitCategoryId);
+
+        var updateQuery = $@"UPDATE ACCOUNT 
+                             SET {balanceColumn} = {balanceColumn} - @Amount 
+                             WHERE ACCOUNT_NUMBER = @AccountNumber";
 
         await _dbConnection.ExecuteAsync(updateQuery, new
         {
             Amount = amount,
-            AccountNumber = accountNumber,
-            BenefitCategoryId = benefitCategoryId
+            AccountNumber = accountNumber
         });
     }
 
@@ -42,9 +46,9 @@ public sealed class AccountRepository(IDbConnection dbConnection) : IAccountRepo
         foreach (var balance in initialBalances)
         {
             var query = @"INSERT INTO ACCOUNT 
-                            (AccountNumber, BalanceFood, BalanceMeal, BalanceCash) 
+                              (ACCOUNT_NUMBER, BALANCE_FOOD, BALANCE_MEAL, BALANCE_CASH) 
                           VALUES 
-                            (@AccountNumber, @BalanceFood, @BalanceMeal, @BalanceCash) 
+                              (@ACCOUNTNUMBER, @BalanceFood, @BalanceMeal, @BalanceCash) 
                           ON DUPLICATE KEY UPDATE BalanceFood = @BalanceFood, BalanceMeal = @BalanceMeal, BalanceCash = @BalanceCash";
 
             await _dbConnection.ExecuteAsync(query, new
@@ -59,19 +63,22 @@ public sealed class AccountRepository(IDbConnection dbConnection) : IAccountRepo
 
     public async Task<decimal> GetBenefitBalanceAsync(string accountNumber, BenefitCategoryDomain category)
     {
-        string balanceColumn = category.Id switch
-        {
-            1 => "BALANCEFOOD",
-            2 => "BALANCEMEAL",
-            3 => "BALANCECASH",
-            _ => throw new ArgumentException($"Benefit category with ID {category.Id} not found"),
-        };
+        string balanceColumn = SelectCategory(category.Id);
 
         var query = $@"
                     SELECT {balanceColumn} 
                     FROM ACCOUNT 
-                    WHERE ACCOUNTNUMBER = @AccountNumber";
+                    WHERE ACCOUNT_NUMBER = @AccountNumber";
 
         return await _dbConnection.QueryFirstOrDefaultAsync<decimal>(query, new { AccountNumber = accountNumber });
     }
+
+    private static string SelectCategory(int benefitCategoryId) =>
+        benefitCategoryId switch
+        {
+            1 => "BALANCE_FOOD",
+            2 => "BALANCE_MEAL",
+            3 => "BALANCE_CASH",
+            _ => throw new ArgumentException($"Invalid benefit category ID."),
+        };
 }

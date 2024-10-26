@@ -2,7 +2,7 @@
 
 public enum AuthorizationCode
 {
-    Approved = 0, // "00"
-    InsufficientBalance = 51, // "51"
-    OtherError = 7 // "07"
+    Approved = 00,
+    InsufficientBalance = 51,
+    OtherError = 07
 }

@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 using TransactionAuthorizer.Application.Interfaces;
 using TransactionAuthorizer.Application.Models;
 using TransactionAuthorizer.Domain.Exceptions;
 
 namespace TransactionAuthorizer.Api.Controllers;
 
+[ExcludeFromCodeCoverage]
 [ApiController]
 [Route("api/[controller]")]
 public sealed class TransactionsController(IAuthorizerAppService authorizerAppService, ILogger<TransactionsController> logger) : ControllerBase

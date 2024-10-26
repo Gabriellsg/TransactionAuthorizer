@@ -7,4 +7,4 @@ public sealed record TransactionLogDomain(
     string MerchantName,
     string MerchantCategoryCode,
     DateTime TransactionDate,
-    string AuthorizationCode);
+    int AuthorizationCode);

@@ -1,36 +1,24 @@
 ﻿using Dapper;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using TransactionAuthorizer.Domain.Entities;
 using TransactionAuthorizer.Domain.Interfaces;
 
 namespace TransactionAuthorizer.Infrastructure.Repositories;
 
-public sealed record TransactionLogRepository(IDbConnection dbConnection) : ITransactionLogRepository
+[ExcludeFromCodeCoverage]
+public sealed record TransactionLogRepository(IDbConnection DbConnection) : ITransactionLogRepository
 {
-    private readonly IDbConnection _dbConnection = dbConnection;
+    private readonly IDbConnection _dbConnection = DbConnection;
 
     public async Task AddTransactionLogAsync(TransactionLogDomain log)
     {
         var query = @"
             INSERT INTO TRANSACTION_LOG 
-                (ACCOUNT_NUMBER, TRANSACTION_DATE, AMOUNT, BENEFIT_CATEGORY_ID, TRANSACTION_STATUS)
+                (ACCOUNT_ID, AMOUNT, MERCHANT, MCC_CODE, TRANSACTION_DATE, AUTHORIZATION_CODE)
             VALUES 
-                (@AccountNumber, @TransactionDate, @Amount, @BenefitCategoryId, @TransactionStatus)";
+                (@AccountId, @Amount, @MerchantName,  @MerchantCategoryCode, @TransactionDate, @AuthorizationCode)";
 
         await _dbConnection.ExecuteAsync(query, log);
-    }
-
-    public async Task<TransactionLogDomain?> GetTransactionLogAsync(int id)
-    {
-        var query = @"SELECT 
-                        ACCOUNT_NUMBER, 
-                        TRANSACTION_DATE, 
-                        AMOUNT, 
-                        BENEFIT_CATEGORY_ID, 
-                        TRANSACTION_STATUS 
-                      FROM TRANSACTION_LOG 
-                      WHERE ID = @Id";
-
-        return await _dbConnection.QueryFirstOrDefaultAsync<TransactionLogDomain>(query, new { Id = id });
     }
 }
