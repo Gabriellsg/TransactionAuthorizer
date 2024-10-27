@@ -36,7 +36,7 @@ TransactionAuthorizer │ ├── TransactionAuthorizer.API │ ├── Tran
    ```bash
    "ConnectionStrings": { "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=TransactionAuthorizerDB;Trusted_Connection=True;" }
 
-As migrações são executadas na inicicialização do projeto para criar a Base de Dados as Tabelas necessárias no banco de dados.
+As migrações são executadas na inicicialização do projeto para criar a base de dados e as tabelas necessárias no banco de dados.
 
 Testes
 Os testes podem ser executados utilizando o xUnit. Certifique-se de que o banco de dados esteja configurado corretamente antes de executar os testes.
