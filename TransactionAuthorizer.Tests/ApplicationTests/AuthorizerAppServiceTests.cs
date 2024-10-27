@@ -84,7 +84,7 @@ public class AuthorizerAppServiceTests
         var transactionRequest = new TransactionRequestModel("", 50, "5412", "Test Merchant");
         var validationErrors = new List<ValidationFailure>
         {
-            new ValidationFailure("AccountNumber", "Account number is required.")
+            new("AccountNumber", "Account number is required.")
         };
 
         _mockValidatorRequest.Setup(v => v.ValidateAsync(It.IsAny<TransactionRequestModel>()))
