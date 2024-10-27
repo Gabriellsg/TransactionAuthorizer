@@ -32,11 +32,11 @@ TransactionAuthorizer │ ├── TransactionAuthorizer.API │ ├── Tran
    ```bash
    git clone https://github.com/Gabriellsg/TransactionAuthorizer.git
 
-1. Configure a string de conexão no appsettings.json:
+1. Configure a string de conexão no appsettings.json(Já configurada para acesso padrão ao MSSQLLocalDB):
    ```bash
    "ConnectionStrings": { "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=TransactionAuthorizerDB;Trusted_Connection=True;" }
 
-As migrações são executadas na inicicialização do projeto para criar as tabelas necessárias no banco de dados.
+As migrações são executadas na inicicialização do projeto para criar a Base de Dados as Tabelas necessárias no banco de dados.
 
 Testes
 Os testes podem ser executados utilizando o xUnit. Certifique-se de que o banco de dados esteja configurado corretamente antes de executar os testes.
